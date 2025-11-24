@@ -54,18 +54,16 @@ This port maintains API compatibility with the original library.
 
 ```groovy
 repositories {
-    maven {
-        name = "KosmX's maven"
-        url = 'https://maven.kosmx.dev/'
-    }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    // Replace with your port's maven coordinates when published
-    modImplementation "dev.kosmx.player-anim:player-animation-lib-fabric:2.0.1+1.21.10"
-    include "dev.kosmx.player-anim:player-animation-lib-fabric:2.0.1+1.21.10"
+    modImplementation "com.github.TOSTcRa:playerAnimator-1.21.10:v2.0.1-1.21.10-unofficial"
+    include "com.github.TOSTcRa:playerAnimator-1.21.10:v2.0.1-1.21.10-unofficial"
 }
 ```
+
+**Note:** JitPack automatically builds from GitHub releases. Make sure you're using a valid release tag.
 
 #### Basic Usage
 
