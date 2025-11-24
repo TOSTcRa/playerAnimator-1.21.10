@@ -14,18 +14,22 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.renderer.entity.player.AvatarRenderer;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(PlayerRenderer.class)
-public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
-    public PlayerRendererMixin(EntityRendererProvider.Context context, PlayerModel<AbstractClientPlayer> entityModel, float f) {
+@Mixin(AvatarRenderer.class)
+public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractClientPlayer, AvatarRenderState, PlayerModel> {
+    public PlayerRendererMixin(EntityRendererProvider.Context context, PlayerModel entityModel, float f) {
         super(context, entityModel, f);
     }
+    // TODO: Port to 1.21.10 - render() method removed, need to find new injection point
+    // This controlled first person visibility - may need to move to setupAnim or extractRenderState
+    /*
     @Inject(method = "render(Lnet/minecraft/client/player/AbstractClientPlayer;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;render(Lnet/minecraft/world/entity/LivingEntity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))
     private void hideBonesInFirstPerson(AbstractClientPlayer entity,
@@ -42,39 +46,39 @@ public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractC
                 // Showing arms based on configuration
                 var showRightArm = config.isShowRightArm();
                 var showLeftArm = config.isShowLeftArm();
-                this.model.rightArm.visible = showRightArm;
-                this.model.rightSleeve.visible = showRightArm;
-                this.model.leftArm.visible = showLeftArm;
-                this.model.leftSleeve.visible = showLeftArm;
+                this.getModel().rightArm.visible = showRightArm;
+                this.getModel().rightSleeve.visible = showRightArm;
+                this.getModel().leftArm.visible = showLeftArm;
+                this.getModel().leftSleeve.visible = showLeftArm;
             }
         }
 
         // No `else` case needed to show parts, since the default state should be correct already
     }
+    */
 
     @Unique
     private void setAllPartsVisible(boolean visible) {
-        this.model.head.visible = visible;
-        this.model.body.visible = visible;
-        this.model.leftLeg.visible = visible;
-        this.model.rightLeg.visible = visible;
-        this.model.rightArm.visible = visible;
-        this.model.leftArm.visible = visible;
+        this.getModel().head.visible = visible;
+        this.getModel().body.visible = visible;
+        this.getModel().leftLeg.visible = visible;
+        this.getModel().rightLeg.visible = visible;
+        this.getModel().rightArm.visible = visible;
+        this.getModel().leftArm.visible = visible;
 
-        this.model.hat.visible = visible;
-        this.model.leftSleeve.visible = visible;
-        this.model.rightSleeve.visible = visible;
-        this.model.leftPants.visible = visible;
-        this.model.rightPants.visible = visible;
-        this.model.jacket.visible = visible;
+        this.getModel().hat.visible = visible;
+        this.getModel().leftSleeve.visible = visible;
+        this.getModel().rightSleeve.visible = visible;
+        this.getModel().leftPants.visible = visible;
+        this.getModel().rightPants.visible = visible;
+        this.getModel().jacket.visible = visible;
     }
 
 
-    @Inject(method = "setupRotations(Lnet/minecraft/client/player/AbstractClientPlayer;Lcom/mojang/blaze3d/vertex/PoseStack;FFFF)V", at = @At("RETURN"))
-    private void applyBodyTransforms(AbstractClientPlayer abstractClientPlayerEntity, PoseStack matrixStack, float f, float bodyYaw, float tickDelta, float scale, CallbackInfo ci){
-        var animationPlayer = ((IAnimatedPlayer) abstractClientPlayerEntity).playerAnimator_getAnimation();
-        animationPlayer.setTickDelta(tickDelta);
-        if(animationPlayer.isActive()){
+    @Inject(method = "setupRotations(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;FF)V", at = @At("RETURN"))
+    private void applyBodyTransforms(AvatarRenderState avatarRenderState, PoseStack matrixStack, float f, float g, CallbackInfo ci){
+        var animationPlayer = ((dev.kosmx.playerAnim.impl.IRenderStateWithAnimation) avatarRenderState).playerAnimator_getAnimation();
+        if(animationPlayer != null && animationPlayer.isActive()){
 
             //These are additive properties
             Vec3f vec3e = animationPlayer.get3DTransform("body", TransformType.SCALE,
@@ -91,10 +95,13 @@ public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractC
         }
     }
 
+    // TODO: Port to 1.21.10 - renderHand() split into renderRightHand() and renderLeftHand()
+    /*
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/PlayerModel;setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V"))
     private void notifyModelOfFirstPerson(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, AbstractClientPlayer abstractClientPlayer, ModelPart modelPart, ModelPart modelPart2, CallbackInfo ci) {
         if (this.getModel() instanceof IPlayerModel playerModel && !((IAnimatedPlayer)abstractClientPlayer).playerAnimator_getAnimation().getFirstPersonMode().isEnabled()) {
             playerModel.playerAnimator_prepForFirstPersonRender();
         }
     }
+    */
 }

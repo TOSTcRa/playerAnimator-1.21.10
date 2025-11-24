@@ -22,14 +22,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CapeLayer.class)
-public abstract class CapeLayerMixin extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
-    public CapeLayerMixin(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderLayerParent) {
+public abstract class CapeLayerMixin extends RenderLayer<net.minecraft.client.renderer.entity.state.AvatarRenderState, PlayerModel> {
+    public CapeLayerMixin(RenderLayerParent<net.minecraft.client.renderer.entity.state.AvatarRenderState, PlayerModel> renderLayerParent) {
         super(renderLayerParent);
     }
 
-    @Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/PlayerModel;renderCloak(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;II)V"))
-    private void render(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, AbstractClientPlayer abstractClientPlayer, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        AnimationApplier emote = ((IAnimatedPlayer) abstractClientPlayer).playerAnimator_getAnimation();
+    @Inject(method = "submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/client/renderer/entity/state/AvatarRenderState;FF)V", at = @At("HEAD"))
+    private void onSubmit(PoseStack poseStack, net.minecraft.client.renderer.SubmitNodeCollector submitNodeCollector, int i, net.minecraft.client.renderer.entity.state.AvatarRenderState avatarRenderState, float f, float g, CallbackInfo ci) {
+        AnimationApplier emote = ((dev.kosmx.playerAnim.impl.IRenderStateWithAnimation)avatarRenderState).playerAnimator_getAnimation();
+        if (emote == null) return;
         if (emote.isActive()) {
             ModelPart torso = this.getParentModel().body;
             Pair<Float, Float> torsoBend = emote.getBend("torso");
@@ -42,30 +43,11 @@ public abstract class CapeLayerMixin extends RenderLayer<AbstractClientPlayer, P
             poseStack.translate(0.0F, 0.0F, 0.125F);
             poseStack.mulPose(Axis.YP.rotationDegrees(180));
 
-            ModelPart cape = ((PlayerModelAccessor)this.getParentModel()).getCloak();
-            cape.x = 0;
-            cape.y = 0;
-            cape.z = 0;
-            cape.xRot = 0;
-            cape.yRot = 0;
-            cape.zRot = 0;
-
-            IBendHelper.INSTANCE.bend(cape, bend);
-        }
-        else {
-            IBendHelper.INSTANCE.bend(((PlayerModelAccessor)this.getParentModel()).getCloak(), null);
+            // Cape is no longer part of PlayerModel in 1.21.10
+            // It's rendered directly by CapeLayer, transformations applied via poseStack
+            // Bend transformations are applied through IBendHelper.rotateMatrixStack called above
         }
     }
 
-    @WrapWithCondition(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;mulPose(Lorg/joml/Quaternionf;)V"))
-    private boolean mulPose(PoseStack instance, Quaternionf quaternionf, @Local(argsOnly = true) AbstractClientPlayer abstractClientPlayer) {
-        AnimationApplier emote = ((IAnimatedPlayer) abstractClientPlayer).playerAnimator_getAnimation();
-        return !emote.isActive();
-    }
-
-    @WrapWithCondition(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"))
-    private boolean translate(PoseStack instance, float f, float g, float h, @Local(argsOnly = true) AbstractClientPlayer abstractClientPlayer) {
-        AnimationApplier emote = ((IAnimatedPlayer) abstractClientPlayer).playerAnimator_getAnimation();
-        return !emote.isActive();
-    }
+    // TODO: Возможно нужно будет добавить wrap условия для submit метода если понадобится
 }

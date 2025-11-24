@@ -9,6 +9,7 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,14 +21,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import static net.minecraft.world.entity.EquipmentSlot.CHEST;
 
 @Mixin(HumanoidArmorLayer.class)
-public abstract class ArmorFeatureRendererMixin<T extends LivingEntity, M extends HumanoidModel<T>, A extends HumanoidModel<T>> extends RenderLayer<T, M> {
+public abstract class ArmorFeatureRendererMixin<S extends HumanoidRenderState, M extends HumanoidModel<S>, A extends HumanoidModel<S>> extends RenderLayer<S, M> {
 
-    protected ArmorFeatureRendererMixin(RenderLayerParent<T, M> renderLayerParent) {
+    protected ArmorFeatureRendererMixin(RenderLayerParent<S, M> renderLayerParent) {
         super(renderLayerParent);
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void initInject(RenderLayerParent<T, M> context, A leggingsModel, A bodyModel, ModelManager modelManager, CallbackInfo ci) {
+    private void initInject(RenderLayerParent<S, M> context, A leggingsModel, A bodyModel, ModelManager modelManager, CallbackInfo ci) {
         ((IUpperPartHelper) this).setUpperPart(false);
     }
 

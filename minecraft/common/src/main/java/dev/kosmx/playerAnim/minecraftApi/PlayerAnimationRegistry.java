@@ -4,8 +4,11 @@ import dev.kosmx.playerAnim.api.IPlayable;
 import dev.kosmx.playerAnim.minecraftApi.codec.AnimationCodecs;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.ApiStatus;
@@ -139,9 +142,10 @@ public final class PlayerAnimationRegistry {
      */
     public static String serializeTextToString(String arg) {
         try {
-            var component = Component.Serializer.fromJson(arg, RegistryAccess.EMPTY);
-            if (component != null) {
-                return component.getString();
+            var jsonElement = JsonParser.parseString(arg);
+            var result = ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, jsonElement);
+            if (result.result().isPresent()) {
+                return result.result().get().getString();
             }
         } catch(Exception ignored) { }
         return arg.replace("\"", "");

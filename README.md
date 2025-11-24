@@ -1,174 +1,193 @@
-# NO-LONGER-UPDATED
-I no longer wish to maintain this project.  
+# ⚠️ UNOFFICIAL PORT: PlayerAnimator for Minecraft 1.21.10
 
-Please use PAL instead: https://docs.zigythebird.com/pal/how_to_port_from_player_animator/
+**This is an unofficial community port of the PlayerAnimator library for Minecraft 1.21.10**
 
-Major bugfixes on existing releases will be done if needed, nothing else.
+## 📢 Important Notice
 
-# PlayerAnimator
+- ⚠️ **UNOFFICIAL PORT** - Not supported by the original author
+- 👤 **Original Author:** [KosmX](https://github.com/KosmX)
+- 📦 **Original Project:** [minecraftPlayerAnimator](https://github.com/KosmX/minecraftPlayerAnimator)
+- ⚖️ **License:** MIT License (Copyright © 2022 KosmX)
+- 🔄 **Recommended Alternative:** [PAL (Player Animator Library)](https://docs.zigythebird.com/pal/)
 
-PlayerAnimator is a minecraft library to animate the **player** while trying to break as few mods as possible.    
-If you want to add new entities, use [Geckolib](https://geckolib.com/#mods)
+> The original author is no longer maintaining PlayerAnimator and recommends using PAL instead.
 
-If you want to trigger simple animations from the server, you might want to use [Emotecraft's server-side API](https://github.com/KosmX/emotes/tree/dev/emotesAPI/src/main/java/io/github/kosmx/emotes/api/events/server).
+## 📦 What is this?
 
-## Official projects
-**GitHub project** https://github.com/KosmX/minecraftPlayerAnimator  
-**Modrinth** https://modrinth.com/mod/playeranimator  
-**CurseForge** https://www.curseforge.com/minecraft/mc-mods/playeranimator  
-**KosmX's Maven (for API use)** https://maven.kosmx.dev/dev/kosmx/player-anim/  
-> Avoid downloading the library from other sources!  
+PlayerAnimator is a Minecraft library to animate the **player** while trying to break as few mods as possible.
 
+This port adapts the library to work with Minecraft 1.21.10 (Fabric).
 
-## Example mods
-[Fabric example](https://github.com/KosmX/fabricPlayerAnimatorExample)  
-[Forge example](https://github.com/KosmX/forgePlayerAnimatorExample)  
+## ✅ What Works
 
+- ✅ Basic player animation system
+- ✅ Body part animations (head, torso, arms, legs)
+- ✅ Item in hand animations
+- ✅ Elytra animations (correctly positioned on back)
+- ✅ Animation layer system with priorities
+- ✅ Animation loading from JSON (GeckoLib and Emotecraft formats)
+- ✅ First-person animation mode
+- ✅ Bend transformations for body parts
 
-# Include in your dev environment
-Fabric loom (or architectury loom)
+## ⚠️ Known Limitations
+
+- ❌ **Without bendy-lib** - The smooth bending library is not ported to 1.21.10
+  - Animations will look less smooth
+  - Body parts won't "bend" in the middle
+- ❌ **ArmorFeatureRendererMixin disabled** - The `setPartVisibility` method was removed in 1.21.10
+  - Armor visibility control in first-person mode may not work correctly
+
+## 📥 Installation
+
+### For Players
+
+1. Download the latest version from [Releases](../../releases)
+2. Install [Fabric Loader](https://fabricmc.net/use/) 0.16.0+
+3. Install [Fabric API](https://modrinth.com/mod/fabric-api) 0.138.3+
+4. Place the JAR file in your `mods` folder
+
+### For Developers
+
+This port maintains API compatibility with the original library.
+
+#### Gradle Setup (Fabric)
+
 ```groovy
 repositories {
-    (...)
     maven {
-        name "KosmX's maven"
-        url 'https://maven.kosmx.dev/'
+        name = "KosmX's maven"
+        url = 'https://maven.kosmx.dev/'
     }
 }
 
 dependencies {
-    (...)
-    
-    //If you don't want to include the library in your jar, remove the include word
-    //You can find the latest version in [](https://maven.kosmx.dev/dev/kosmx/player-anim/player-animation-lib-fabric/)
-    include modImplementation("dev.kosmx.player-anim:player-animation-lib-fabric:${project.player_anim}")
-    
-    //You might want bendy-lib. playerAnimator will wrap it.
-    //include modRuntimeOnly("io.github.kosmx.bendy-lib:bendy-lib-fabric:${project.bendylib_version}")
-}
-
-```
-If you use [architectury](https://docs.architectury.dev/docs/forge_loom/) setup you can implement `player-animation-lib` package in *common*.  
-
-ForgeGradle  
-```groovy
-
-minecraft {
-    (...)
-    runs {
-        client {
-            (...)
-           
-            //You have to set mixin propert if you want to run playerAnimator in development environment.
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-        }
-        server {
-            (...)
-            //Add this to the server too.
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-        }
-    }
-}
-
-repositories {
-    (...)
-    maven {
-        name "KosmX's maven"
-        url 'https://maven.kosmx.dev/'
-    }
-}
-
-dependencies {
-    (...)
-    
-    //If you don't want to include the library in your jar, remove the include word
-    implementation fg.deobf("dev.kosmx.player-anim:player-animation-lib-forge:${project.player_anim}")
-    
-    //Bendy-lib also has a Forge version:
-    //runtimeOnly fg.deobf("io.github.kosmx.bendy-lib:bendy-lib-forge:${project.bendylib_version}")
-    
-    //Forge JarJar only works on MC 1.19. Do not use JarJar on older version!
+    // Replace with your port's maven coordinates when published
+    modImplementation "dev.kosmx.player-anim:player-animation-lib-fabric:2.0.1+1.21.10"
+    include "dev.kosmx.player-anim:player-animation-lib-fabric:2.0.1+1.21.10"
 }
 ```
 
-**For more advanced things, you might use `anim-core` package**.  
-It is a minecraft-independent module, containing the animation format and the layers but not the playing mixins...  
-Also it is **not** a minecraft mod, do not use `modImplementation` on this.
+#### Basic Usage
 
+The API remains the same as the original:
 
-
-# Structure 
-The library has an animation list of currently *played* animations
-Higher priority animations will override others, but can be transparent...  
-
-To add an animation to the player, use 
 ```java
+import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationAccess;
+import dev.kosmx.playerAnim.api.layered.ModifierLayer;
+
+// Get animation stack for player
 AnimationStack animationStack = PlayerAnimationAccess.getPlayerAnimLayer(clientPlayer);
-animationStack.addAnimLayer(...);
+
+// Add animation layer
+animationStack.addAnimLayer(new ModifierLayer<>(animation));
 ```
-I advice using `ModifierLayer` and setting its animation. (this is null-tolerant)
-`ModifierLayer` is an `AnimationContainer` but with modifiers and fade-in/out.
 
-To play a keyframe animation from `emotecraft` or `geckolib` json, `dev.kosmx.playerAnim.core.data.gson.AnimationJson` will help you load it.  
-`new KeyframeAnimationPlayer(animation)` will play it for you.
+For full API documentation, see the [original README](README_ORIGINAL.md).
 
-To modify/tweak animations, look into `dev.kosmx.playerAnim.api.layered` package, you might implement your own `IAnimation` or extend/modify an existing class.  
-`ModifierLayer` will let you add modifiers. It is effectively an `AnimationContainer` layer.  
+## 📝 Changelog (1.21.10 Port)
 
-You might find some usage in the [fabric testmod](https://github.com/KosmX/minecraftPlayerAnimator/blob/dev/minecraft/fabric/src/testmod/java/dev/kosmx/animatorTestmod/PlayerAnimTestmod.java)  
-The forge usage is similar. For most fabric users, you can use [linkie](https://linkie.shedaniel.me/mappings) to translate mojmap to Yarn.  
+### Major Changes from 1.21.7 → 1.21.10:
 
-# Model
-The player model is made of 6 body parts:  
-- head  
-- torso  
-- right arm  
-- left arm  
-- right leg  
-- left leg
+- ✅ Ported to new Entity → RenderState system (1.21.2+)
+- ✅ Updated PlayerModel.setupAnim() to new signature
+- ✅ Ported HeldItemMixin (renderArmWithItem → submit)
+- ✅ Fixed elytra positioning
+- ✅ Updated all render/submit methods for new architecture
+- ✅ Created IRenderStateWithAnimation interface for animation data flow
+- ✅ Ported all mixin injections to submit() methods
+- ❌ Temporarily disabled bendy-lib (no 1.21.10 version available)
+- ❌ Temporarily disabled ArmorFeatureRendererMixin (setPartVisibility removed)
 
-And I added an extra: __body__:  
-This is a bone for the whole player, transforming it will transform every part.  
-*To move everything up by 2, you only need to move the `body` up.*  
+See detailed changes in [PORTING_NOTES.md](PORTING_NOTES.md)
 
-> Most Blockbench player models use the name `body` for the part, I call `torso`. In that case, rename it to `torso` and that will fix the model for the library.  
+## 🎮 Model Structure
 
-Part names can be `snake_case` or `camelCase`:  
-`right_arm` or `rightArm`, both will work.  
+The player model consists of 6 body parts:
+- **head** - Player's head
+- **torso** - Upper body/chest
+- **right_arm** / **rightArm** - Right arm
+- **left_arm** / **leftArm** - Left arm
+- **right_leg** / **rightLeg** - Right leg
+- **left_leg** / **leftLeg** - Left leg
 
-Supported transformations:  
-offset, rotation
+Plus an extra part: **body**
+- This is a bone for the whole player
+- Transforming it will transform every part
 
-And bend if bendy-lib is loaded.    
-Bend will `bend` the part in the middle, check the `Blender` model to see how.  
+> Most Blockbench player models use the name `body` for what we call `torso`. Rename it to `torso` to fix compatibility.
 
-The library supports all easings from [easings.net](https://easings.net/#) and constant and linear.  
-No easing parameters are supported. (everything was copied from easings.net)  
+### Supported Transformations
 
-## Animate
-You can use GeckoLib or *Emotecraft* format to create animations.  
-Be careful, the model has to match the player or the animation won't work as it should.  
+- **Position** (offset)
+- **Rotation**
+- **Scale**
+- **Bend** (if bendy-lib is loaded)
 
-In Emotecraft repo, there are some [tools](https://github.com/KosmX/emotes/tree/dev/blender) for animation.  
-(You don't need emotecraft to use those tools)  
-> The blockbench model **doesn't** support items, I don't know how to add an easily replaceable item...    
+### Animation Formats
 
-***
+You can use **GeckoLib** or **Emotecraft** format to create animations.
 
-To load an animation, put the file(s) into `assets/modid/player_animation/`  
-Then you can get the animation with `dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry#getAnimation()`
+Place animation files in: `assets/modid/player_animation/`
 
-## Notes
-GeckoLib is not guaranteed to work, but you can try! (It will work most of the time)  
-[molang](https://docs.microsoft.com/minecraft/creator/reference/content/molangreference/) is not supported  
-***
-Do **not** shadow the library in your mod, this library can not be loaded multiple times safely. (even from different packages)  
-> The license would allow it, but it would break many things.  
-You may use `include`(fabric any version) or JarJar(forge 1.19.1+).
+Load animations with:
+```java
+AnimationContainer animation = PlayerAnimationRegistry.getAnimation(
+    new Identifier("modid", "animation_name")
+);
+```
 
+## 🔗 Links
 
+### Original Project
+- [GitHub](https://github.com/KosmX/minecraftPlayerAnimator)
+- [Modrinth](https://modrinth.com/mod/playeranimator)
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/playeranimator)
+- [KosmX's Maven](https://maven.kosmx.dev/dev/kosmx/player-anim/)
 
-## If you have questions, feel free to ask on Discord:  
-https://discord.com/invite/x22jkxRpsD
+### Recommended Alternative
+- [PAL (Player Animator Library)](https://docs.zigythebird.com/pal/)
+- [Migration Guide from PlayerAnimator to PAL](https://docs.zigythebird.com/pal/how_to_port_from_player_animator/)
+
+### Community
+- [Discord Server](https://discord.com/invite/x22jkxRpsD)
+
+## 🙏 Credits
+
+- **KosmX** - For creating the original PlayerAnimator library
+- All contributors to the original project
+- Fabric team for excellent modding tools
+
+## 🐛 Bug Reports
+
+For bugs specific to the 1.21.10 port, please open an issue in this repository.
+
+For general PlayerAnimator questions or API usage, refer to the [original project](https://github.com/KosmX/minecraftPlayerAnimator) or join the [Discord](https://discord.com/invite/x22jkxRpsD).
+
+## ⚖️ License
+
+MIT License
+
+```
+Copyright (c) 2022 KosmX (original project)
+Copyright (c) 2025 TOSTcR (1.21.10 port)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+Full license text in [LICENSE](LICENSE) file.

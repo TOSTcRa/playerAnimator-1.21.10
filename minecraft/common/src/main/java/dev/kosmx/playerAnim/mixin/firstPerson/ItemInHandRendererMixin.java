@@ -12,6 +12,7 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
     @Inject(method = "renderHandsWithItems", at = @At("HEAD"), cancellable = true)
-    private void disableDefaultItemIfNeeded(float f, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LocalPlayer localPlayer, int i, CallbackInfo ci) {
+    private void disableDefaultItemIfNeeded(float f, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer localPlayer, int i, CallbackInfo ci) {
         if (localPlayer instanceof IAnimatedPlayer player && (player.playerAnimator_getAnimation().getFirstPersonMode() == FirstPersonMode.THIRD_PERSON_MODEL)) {
                 ci.cancel();
             }
@@ -37,8 +38,11 @@ public class ItemInHandRendererMixin {
         return null;
     }*/
 
-    @Inject(method = "renderItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/ItemRenderer;renderStatic(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/level/Level;III)V"), cancellable = true)
-    private void cancelItemRender(LivingEntity entity, ItemStack itemStack, ItemDisplayContext transformType, boolean bl, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, CallbackInfo ci) {
+    // TODO: Port to 1.21.10 - ItemRenderer.renderStatic removed, items now use ItemStackRenderState.submit
+    // This controlled item visibility in first-person mode - may need to find new injection point
+    /*
+    @Inject(method = "renderItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/ItemRenderer;renderStatic(...)V"), cancellable = true)
+    private void cancelItemRender(LivingEntity entity, ItemStack itemStack, ItemDisplayContext transformType, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, CallbackInfo ci) {
         if (entity != Minecraft.getInstance().getCameraEntity()) {
             return;
         }
@@ -55,15 +59,15 @@ public class ItemInHandRendererMixin {
             }
         }
     }
+    */
 
     @Inject(method = "renderItem", at = @At("HEAD"))
     void changeItemLocation(
             LivingEntity livingEntity,
             ItemStack itemStack,
             ItemDisplayContext itemDisplayContext,
-            boolean bl,
             PoseStack poseStack,
-            MultiBufferSource multiBufferSource,
+            SubmitNodeCollector submitNodeCollector,
             int i,
             CallbackInfo ci
     ) {
@@ -71,11 +75,14 @@ public class ItemInHandRendererMixin {
             if (player.playerAnimator_getAnimation().isActive()) {
                 AnimationProcessor anim = player.playerAnimator_getAnimation();
 
-                Vec3f scale = anim.get3DTransform(bl ? "leftItem" : "rightItem", TransformType.SCALE,
+                // Determine if this is left or right hand based on ItemDisplayContext
+                boolean isLeftHand = itemDisplayContext == ItemDisplayContext.FIRST_PERSON_LEFT_HAND || itemDisplayContext == ItemDisplayContext.THIRD_PERSON_LEFT_HAND;
+
+                Vec3f scale = anim.get3DTransform(isLeftHand ? "leftItem" : "rightItem", TransformType.SCALE,
                         new Vec3f(ModelPart.DEFAULT_SCALE, ModelPart.DEFAULT_SCALE, ModelPart.DEFAULT_SCALE)
                 );
-                Vec3f rot = anim.get3DTransform(bl ? "leftItem" : "rightItem", TransformType.ROTATION, Vec3f.ZERO);
-                Vec3f pos = anim.get3DTransform(bl ? "leftItem" : "rightItem", TransformType.POSITION, Vec3f.ZERO).scale(1/16f);
+                Vec3f rot = anim.get3DTransform(isLeftHand ? "leftItem" : "rightItem", TransformType.ROTATION, Vec3f.ZERO);
+                Vec3f pos = anim.get3DTransform(isLeftHand ? "leftItem" : "rightItem", TransformType.POSITION, Vec3f.ZERO).scale(1/16f);
 
                 poseStack.scale(scale.getX(), scale.getY(), scale.getZ());
                 poseStack.translate(pos.getX(), pos.getY(), pos.getZ());

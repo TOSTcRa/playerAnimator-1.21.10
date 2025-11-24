@@ -8,7 +8,7 @@ import dev.kosmx.playerAnim.impl.Helper;
 import dev.kosmx.playerAnim.impl.IMutableModel;
 import dev.kosmx.playerAnim.impl.IUpperPartHelper;
 import dev.kosmx.playerAnim.impl.animation.IBendHelper;
-import net.minecraft.client.model.AgeableListModel;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.RenderType;
@@ -20,10 +20,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
 import java.util.function.Function;
 
 @Mixin(HumanoidModel.class)
-public abstract class BipedEntityModelMixin<T extends LivingEntity> extends AgeableListModel<T> implements IMutableModel {
+public abstract class BipedEntityModelMixin implements IMutableModel {
     @Final
     @Shadow
     public ModelPart rightArm;
@@ -51,44 +52,19 @@ public abstract class BipedEntityModelMixin<T extends LivingEntity> extends Agea
         this.animation = emoteSupplier;
     }
 
+    // TODO: Port to 1.21.10 - copyPropertiesTo method removed from HumanoidModel
+    // This controlled copying animation supplier when model properties are copied
+    // Need to find new model copying mechanism or hook
+    /*
     @Inject(method = "copyPropertiesTo", at = @At("RETURN"))
-    private void copyMutatedAttributes(HumanoidModel<T> bipedEntityModel, CallbackInfo ci){
+    private void copyMutatedAttributes(HumanoidModel bipedEntityModel, CallbackInfo ci){
         if(animation != null) {
             ((IMutableModel) bipedEntityModel).setEmoteSupplier(animation);
         }
     }
+    */
 
-    @Intrinsic(displace = true)
-    @Override
-    public void renderToBuffer(PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color){
-        if(Helper.isBendEnabled() && this.animation.get() != null && this.animation.get().isActive()){
-            this.headParts().forEach((part)->{
-                if(! ((IUpperPartHelper) part).isUpperPart()){
-                    part.render(matrices, vertices, light, overlay, color);
-                }
-            });
-            this.bodyParts().forEach((part)->{
-                if(! ((IUpperPartHelper) part).isUpperPart()){
-                    part.render(matrices, vertices, light, overlay, color);
-                }
-            });
-
-            SetableSupplier<AnimationProcessor> emoteSupplier = this.animation;
-            matrices.pushPose();
-            IBendHelper.rotateMatrixStack(matrices, emoteSupplier.get().getBend("body"));
-            this.headParts().forEach((part)->{
-                if(((IUpperPartHelper) part).isUpperPart()){
-                    part.render(matrices, vertices, light, overlay, color);
-                }
-            });
-            this.bodyParts().forEach((part)->{
-                if(((IUpperPartHelper) part).isUpperPart()){
-                    part.render(matrices, vertices, light, overlay, color);
-                }
-            });
-            matrices.popPose();
-        } else super.renderToBuffer(matrices, vertices, light, overlay, color);
-    }
+    // renderToBuffer injection moved to ModelMixin since the method is final in Model class
 
     @Final
     @Shadow public ModelPart body;
@@ -96,6 +72,10 @@ public abstract class BipedEntityModelMixin<T extends LivingEntity> extends Agea
     @Shadow @Final public ModelPart head;
 
     @Shadow @Final public ModelPart hat;
+
+    @Shadow @Final public ModelPart rightLeg;
+
+    @Shadow @Final public ModelPart leftLeg;
 
     @Override
     public SetableSupplier<AnimationProcessor> getEmoteSupplier(){
