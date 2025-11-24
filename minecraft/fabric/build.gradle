@@ -117,28 +117,18 @@ publishing {
 
     // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-        repositories {
-
-            if (project.keysExists) {
-                maven {
-                    url = 'https://maven.kosmx.dev/'
-                    credentials {
-                        username = project.keys.kosmx_maven_user
-                        password = project.keys.kosmx_maven
-                    }
-                }
-                maven {
-                    name = "GitHubPackages"
-                    url = "https://maven.pkg.github.com/kosmx/minecraftPlayerAnimator"
-                    credentials {
-                        username = System.getenv("GITHUB_ACTOR")
-                        password = System.getenv("GITHUB_TOKEN")
-                    }
-                }
-            } else {
-                mavenLocal()
+        // Publish to GitHub Packages
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/TOSTcRa/playerAnimator-1.21.10"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user")
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.token")
             }
         }
+
+        // Fallback to local Maven for testing
+        mavenLocal()
     }
 }
 
